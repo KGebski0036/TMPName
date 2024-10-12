@@ -7,6 +7,8 @@
 #include "downloader.hpp"
 #include <ftxui/dom/table.hpp>
 #include <fstream>
+#include <filesystem>
+
 
 using namespace ftxui;
 
@@ -75,10 +77,15 @@ void draw(const nlohmann::json& json) {
     auto left = Container::Vertical({menu});
     auto left_window = Renderer(left, [&] { return window(text("Library"), left->Render()) | flex; });
     auto details_buttons = Container::Horizontal({
-        Button(
-            "Download/Update", [&] { return; }, Style(Color::Green)),
-        Button(
-            "Delete", [&] { return; }, Style(Color::Red)),
+Button("Download/Update", [&] {
+                          auto current = entries.at(static_cast<unsigned long>(selected - 1));
+                          downloadFile("http://localhost:8080" + current.path, current.name + ".zip");
+                        }, Style(Color::Green)),
+                        Button("Delete", [&] {
+                          auto current = entries.at(static_cast<unsigned long>(selected - 1));
+                          std::filesystem::remove(current.name + ".zip");
+                        }, Style(Color::Red)),
+
     });
     auto details = Renderer([&] {
         auto current = entries.at(static_cast<unsigned long>(selected - 1));
@@ -115,6 +122,7 @@ void draw(const nlohmann::json& json) {
                }) |
                flex;
     });
+
     auto package_details = Container::Vertical({details, details_buttons});
 
     auto right_side =
