@@ -3,9 +3,9 @@
 #include "gui.hpp"
 
 auto main() -> int {
-    std::string url = "http://localhost:8080/master.json";  // Replace with the actual file path
-    std::string outputFile = "downloaded_file.txt";
+    std::string url = "http://localhost:8080/master.json";
+    std::string outputFile = "master.json";
 
     downloadFile(url, outputFile);
-    draw();
+    //draw();
 }
