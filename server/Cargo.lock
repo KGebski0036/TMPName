@@ -3,23 +3,6 @@
 version = 3
 
 [[package]]
-name = "TMPName"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "axum",
- "md-5",
- "notify",
- "serde",
- "serde_json",
- "thiserror",
- "tokio",
- "tower-http",
- "uuid",
- "zip",
-]
-
-[[package]]
 name = "addr2line"
 version = "0.24.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -975,6 +958,23 @@ dependencies = [
  "itoa",
  "ryu",
  "serde",
+]
+
+[[package]]
+name = "server"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "axum",
+ "md-5",
+ "notify",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "tokio",
+ "tower-http",
+ "uuid",
+ "zip",
 ]
 
 [[package]]
