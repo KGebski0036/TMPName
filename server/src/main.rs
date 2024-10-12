@@ -5,7 +5,7 @@ use axum::{serve, Extension, Router};
 use std::{
     env, fs::File, path::PathBuf, sync::{Arc, RwLock}
 };
-use tower_http::services::{ServeDir, ServeFile};
+use tower_http::services::ServeDir;
 
 use utils::{watcher::watch_directory, builder::build_metadata};
 
