@@ -8,7 +8,6 @@
 #include <ftxui/dom/table.hpp>
 #include <fstream>
 
-
 using namespace ftxui;
 
 static auto Style(Color color) -> ButtonOption {
@@ -34,13 +33,13 @@ void draw(const nlohmann::json& json) {
         std::string hash;
         std::string author;
         std::string description;
-        int format {};
-        int question_amount {};
+        int format{};
+        int question_amount{};
     };
 
     std::vector<entry> entries;
 
-    for (auto x: json.at("entries")) {
+    for (auto x : json.at("entries")) {
         entries.emplace_back(x.at("name"), x.at("path"), x.at("version"), x.at("course_id"), x.at("hash"));
     }
     int selected = 1;
@@ -75,54 +74,53 @@ void draw(const nlohmann::json& json) {
         &selected);
     auto left = Container::Vertical({menu});
     auto left_window = Renderer(left, [&] { return window(text("Library"), left->Render()) | flex; });
-
-    auto details_info = Renderer([&] {
-
+    auto details_buttons = Container::Horizontal({
+        Button(
+            "Download/Update", [&] { return; }, Style(Color::Green)),
+        Button(
+            "Delete", [&] { return; }, Style(Color::Red)),
+    });
+    auto details = Renderer([&] {
         auto current = entries.at(static_cast<unsigned long>(selected - 1));
 
         if (current.question_amount == 0) {
-          const std::string url = "http://localhost:8080/get_package_metadata?hash=" + current.hash;
-          const std::string outputFile = current.hash + ".json";
+            const std::string url = "http://localhost:8080/get_package_metadata?hash=" + current.hash;
+            const std::string outputFile = current.hash + ".json";
 
-          downloadFile(url, outputFile);
+            downloadFile(url, outputFile);
 
-          const std::ifstream t(outputFile);
-          std::stringstream buffer;
-          buffer << t.rdbuf();
-          const nlohmann::json j = nlohmann::json::parse(buffer.str());
+            const std::ifstream t(outputFile);
+            std::stringstream buffer;
+            buffer << t.rdbuf();
+            const nlohmann::json j = nlohmann::json::parse(buffer.str());
 
-          current.author = j.at("author");
-          current.description = j.at("description");
-          current.format = j.at("format");
-          current.question_amount = j.at("question_amount");
+            current.author = j.at("author");
+            current.description = j.at("description");
+            current.format = j.at("format");
+            current.question_amount = j.at("question_amount");
         }
 
-        return window(text("Deck Details"), vbox({
-          vbox({
-            center(text(current.name)),
-            hbox({
-              center(text("Author: " + current.author)) | flex,
-              center(text("Number of cards: " + std::to_string(current.question_amount))) | flex,
-            }) | flex,
-            hbox({
-              center(text("Course: " + current.curse_id)) | flex,
-              center(text("Update: 10.12.2023")) | flex,
-            }) | flex
-          }) | border,
-          separator(),
-          paragraph(current.description),
-        })) | flex;
-
+        return vbox({
+                   vbox({center(text(current.name)),
+                         hbox({
+                             center(text("Author: " + current.author)) | flex,
+                             center(text("Number of cards: " + std::to_string(current.question_amount))) | flex,
+                         }) | flex,
+                         hbox({
+                             center(text("Course: " + current.curse_id)) | flex,
+                             center(text("Update: 10.12.2023")) | flex,
+                         }) | flex}) |
+                       border,
+                   window(text("Description"), paragraph(current.description)) | yflex,
+               }) |
+               flex;
     });
-    auto details = Container::Vertical({details_info, Container::Horizontal({
-                                                          Button(
-                                                              "Download/Update", [&] { return; }, Style(Color::Green)),
-                                                          Button(
-                                                              "Delete", [&] { return; }, Style(Color::Red)),
-                                                      })});
-    auto all = Container::Horizontal({left_window, details | flex});
+    auto package_details = Container::Vertical({details, details_buttons});
 
-    all = all | size(WIDTH, LESS_THAN, 130);
+    auto right_side =
+        Renderer(package_details, [&]() { return window(text("Deck Details"), package_details->Render()); });
+
+    auto all = Container::Horizontal({left_window, right_side | flex});
 
     screen.Loop(all);
 }
