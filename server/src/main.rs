@@ -1,9 +1,9 @@
 mod utils;
 
 use anyhow::Result;
-use axum::{serve, Router};
+use axum::{serve, Extension, Router};
 use std::{
-    env, fs::File, path::PathBuf, sync::Arc
+    env, fs::File, path::PathBuf, sync::{Arc, RwLock}
 };
 use tower_http::services::{ServeDir, ServeFile};
 
@@ -15,6 +15,9 @@ async fn main() -> Result<()> {
     let metadata_dir= PathBuf::from(env::var("METADATA_DIR").unwrap_or(String::from("./metadata")));
     let metadata_path  = metadata_dir.join(PathBuf::from("metadata.json"));
     let rx = watch_directory(&repo_dir)?;
+
+    let metadata_state = Arc::new(RwLock::new(None));
+    let metadata_state_clone = Arc::clone(&metadata_state);
     
     match File::create_new(&metadata_path) {
         Ok(_) => {println!("[+] metadata.json created")},
@@ -27,9 +30,15 @@ async fn main() -> Result<()> {
         while let Some(res) = rx.recv().await {
             match res {
                 Ok(_) => {
-                    match build_metadata(Arc::clone(&metadata_path_arc)) {
-                        Ok(_) => println!("[+] metadata built successfully"),
-                        Err(e) => println!("[-] error building metadata: {}", e)
+                    match build_metadata(metadata_path_arc) {
+                        Ok(metadata) => {
+                            println!("[+] metadata built successfully");
+
+                            // Update the shared state
+                            let mut metadata_lock = metadata_state_clone.write().unwrap();
+                            *metadata_lock = Some(metadata);
+                        }
+                        Err(e) => println!("[-] error building metadata: {}", e),
                     }
                 }
                 Err(e) => println!("Watch error: {:?}", e),
@@ -40,8 +49,8 @@ async fn main() -> Result<()> {
     let app = Router::new()
         .nest_service("/repo", ServeDir::new(repo_dir))
         .nest_service("/metadata/metadata.json", 
-            ServeFile::new(metadata_path)
-        );
+            ServeFile::new(metadata_path))
+        .layer(Extension(metadata_state));
 
     let listener = tokio::net::TcpListener::bind("127.0.0.1:8080")
         .await
