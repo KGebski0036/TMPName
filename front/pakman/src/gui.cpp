@@ -8,28 +8,26 @@
 void draw(const nlohmann::json &json) {
     using namespace ftxui;
     auto screen = ScreenInteractive::TerminalOutput();
-
+    std::string focused = "";
     std::vector<std::string> entries;
     for (auto x: json.at("list")) {
         entries.push_back(x.at("name"));
     }
     int selected = 0;
     MenuOption option;
-    option.on_enter = screen.ExitLoopClosure();
+    option.on_enter = [&]() {
+        focused = entries.at(static_cast<unsigned long>(selected));
+    };
     auto menu = Menu(&entries, &selected, option);
-    auto test  = Renderer(menu,[&]{
-        return window(text("essa"),menu->Render());
+    auto test = Renderer(menu, [&] {
+        return window(text("essa"), menu->Render()) | flex;
     });
-    auto details = window(text("details"), vbox({
-                                                        text("test") | border,
-                                                        text("cos")
-                                                }));
-    auto details_comp = Renderer([&]{
-        return details;
+    auto details_comp = Renderer([&] {
+        return window(text("details"), vbox({text(focused) | border, text("cos"),})) | flex;
     });
     auto all = Container::Horizontal({
-       test,details_comp
-    });
+                                             test, details_comp
+                                     });
 
     screen.Loop(all);
 
