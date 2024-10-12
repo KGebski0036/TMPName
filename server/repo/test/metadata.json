@@ -1,6 +1,8 @@
 {
     "name": "Miernictwo",
     "version": "1.0",
-    "course_id": "CBE202",
-    "description": "Giga fajna bazunia naruszająca wlasność intelektualolną pani F"
+    "course_id": "CBE2023",
+    "description": "description",
+    "author": "test1",
+    "format": 1
 }

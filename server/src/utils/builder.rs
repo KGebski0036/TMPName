@@ -21,37 +21,38 @@ pub enum ParseError {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Metadata {
-    entries: Vec<ShortEntry>,
+    pub entries: Vec<ShortEntry>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-struct ExtendedEntry {
-    md5: String,
-    name: String,
-    version: String,
-    course_id: String,
-    description: String,
-    author: String,
-    question_amount: u64,
-    date: String,
-    format: u64,
+pub struct ExtendedEntry {
+    pub hash: String,
+    pub name: String,
+    pub version: String,
+    pub course_id: String,
+    pub description: String,
+    pub author: String,
+    pub question_amount: u64,
+    pub format: u64,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ShortEntry {
-    md5: String,
-    name: String,
-    version: String,
-    path: String,
-    course_id: String,
+    pub hash: String,
+    pub name: String,
+    pub version: String,
+    pub path: String,
+    pub course_id: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-struct PackageMetadata {
-    name: String,
-    version: String,
-    course_id: String,
-    description: String,
+pub struct PackageMetadata {
+    pub name: String,
+    pub version: String,
+    pub course_id: String,
+    pub description: String,
+    pub author: String,
+    pub format: u64
 }
 
 fn compute_file_hash(path: &PathBuf) -> Result<String> {
@@ -84,7 +85,7 @@ fn to_short_entry(package_metadata: PackageMetadata, path: PathBuf) -> Result<Sh
                     // Compute the hash of the ZIP file
                     let hash = compute_file_hash(&path)?;
                     return Ok(ShortEntry {
-                        md5: hash,
+                        hash: hash,
                         name: package_metadata.name,
                         version: package_metadata.version,
                         path: split_at_repo(path.to_str().unwrap().to_string())?,

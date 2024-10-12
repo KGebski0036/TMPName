@@ -10,7 +10,8 @@ use std::{
 use tower_http::services::ServeDir;
 
 use routes::{
-    get_metadata_all::get_metadata_all, get_package_metadata::get_package_metadata// index::index
+    get_metadata_all::get_metadata_all,
+    get_package_metadata::get_package_metadata, // index::index
 };
 use utils::{builder::build_metadata, watcher::watch_directory};
 
@@ -51,8 +52,9 @@ async fn main() -> Result<()> {
         //.route("/", get(index))
         .route("/get_metadata_all", get(get_metadata_all))
         .route("/get_package_metadata", get(get_package_metadata))
-        .nest_service("/repo", ServeDir::new(repo_dir))
-        .layer(Extension(metadata_state));
+        .nest_service("/repo", ServeDir::new(&repo_dir))
+        .layer(Extension(metadata_state))
+        .layer(Extension(Arc::new(repo_dir)));
 
     let listener = tokio::net::TcpListener::bind("127.0.0.1:8080")
         .await
