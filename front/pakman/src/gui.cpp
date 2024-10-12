@@ -7,18 +7,18 @@
 #include <ftxui/dom/table.hpp>
 
 
-  using namespace ftxui;
+using namespace ftxui;
 
 ButtonOption Style(Color color) {
-  auto option = ButtonOption::Animated(color);
-  option.transform = [](const EntryState& s) {
-    auto element = text(s.label);
-    if (s.focused) {
-      element |= bold;
-    }
-    return element | center | borderEmpty | flex;
-  };
-  return option;
+    auto option = ButtonOption::Animated(color);
+    option.transform = [](const EntryState &s) {
+        auto element = text(s.label);
+        if (s.focused) {
+            element |= bold;
+        }
+        return element | center | borderEmpty | flex;
+    };
+    return option;
 }
 
 
@@ -44,8 +44,22 @@ void draw(const nlohmann::json &json) {
 
     auto menu = Container::Vertical([&] {
         Components comps;
+        unsigned long name_spacing = 2;
+        unsigned long curse_spacing = 2;
         for (const auto &x: entries) {
-            comps.emplace_back(MenuEntry(x.name + " " + x.curse_id + " " + x.ver));
+            name_spacing = std::max(name_spacing, x.name.size());
+            curse_spacing = std::max(curse_spacing, x.curse_id.size());
+        }
+        auto spacing = [](unsigned long len, unsigned long min) {
+            std::string output;
+            while (len - 2 < min--) {
+                output += " ";
+            }
+            return output;
+        };
+        for (const auto &x: entries) {
+            comps.emplace_back(MenuEntry(x.name + spacing(x.name.size(), name_spacing) + x.curse_id +
+                                         spacing(x.curse_id.size(), curse_spacing) + x.ver));
         }
         return comps;
     }(), &selected);
@@ -58,26 +72,39 @@ void draw(const nlohmann::json &json) {
     });
     auto details_info = Renderer([&] {
         return window(text("Details about deck"), vbox({
-          vbox({
-            center(text(entries.at(selected).name)),
-            hbox({
-              center(text("Author: Anonymus")) | flex,
-              center(text("Number of cards: 69")) | flex,
-              center(text("Course: CBE2024")) | flex,
-              center(text("Update: 10.12.2023")) | flex,
-            })
-          }) | border,
-          separator(),
-          paragraph(entries.at(selected).name + " baza pytań."),
-        })) | flex;
+                                                               vbox({
+                                                                            center(text(entries.at(
+                                                                                    static_cast<unsigned long>(selected)).name)),
+                                                                            hbox({
+                                                                                         center(text(
+                                                                                                 "Author: Anonymus")) |
+                                                                                         flex,
+                                                                                         center(text(
+                                                                                                 "Number of cards: 69")) |
+                                                                                         flex,
+                                                                                         center(text(
+                                                                                                 "Course: CBE2024")) |
+                                                                                         flex,
+                                                                                         center(text(
+                                                                                                 "Update: 10.12.2023")) |
+                                                                                         flex,
+                                                                                 })
+                                                                    }) | border,
+                                                               separator(),
+                                                               paragraph(entries.at(
+                                                                       static_cast<unsigned long>(selected)).name +
+                                                                         " baza pytań."),
+                                                       })) | flex;
     });
     auto details = Container::Vertical({
-      details_info,
-      Container::Horizontal({
-         Button("Download/Update", [&] { return; }, Style(Color::Green)),
-         Button("Delete", [&] { return; }, Style(Color::Red)),
-      })
-    });
+                                               details_info,
+                                               Container::Horizontal({
+                                                                             Button("Download/Update", [&] { return; },
+                                                                                    Style(Color::Green)),
+                                                                             Button("Delete", [&] { return; },
+                                                                                    Style(Color::Red)),
+                                                                     })
+                                       });
     auto all = Container::Horizontal({
                                              left_window, details | flex
                                      });
