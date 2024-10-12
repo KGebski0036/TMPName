@@ -35,9 +35,6 @@ void draw(const nlohmann::json& json) {
         entries.emplace_back(x.at("name"), x.at("path"), x.at("ver"), x.at("curseId"));
     }
     int selected = 1;
-    std::string filter_str;
-    auto filter = Input(&filter_str, "Filter");
-    MenuOption option;
 
     auto menu = Container::Vertical(
         [&] {
@@ -67,7 +64,7 @@ void draw(const nlohmann::json& json) {
             return comps;
         }(),
         &selected);
-    auto left = Container::Vertical({filter, menu});
+    auto left = Container::Vertical({menu});
     auto left_window = Renderer(left, [&] { return window(text("Library"), left->Render()) | flex; });
     auto details_info = Renderer([&] {
         return window(text("Deck Details"),
