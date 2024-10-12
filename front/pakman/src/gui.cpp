@@ -81,6 +81,7 @@ void draw(const nlohmann::json& json) {
         auto current = entries.at(selected - 1);
 
         if (current.question_amount == 0) {
+          std::cout << "aaaaa" << "\n";
           std::string url = "http://localhost:8080/get_package_metadata?hash=" + current.hash;
           std::string outputFile = current.hash + ".json";
 
@@ -96,8 +97,6 @@ void draw(const nlohmann::json& json) {
           current.format = j.at("format");
           current.question_amount = j.at("question_amount");
         }
-
-
 
         return window(text("Details about deck"), vbox({
           vbox({
@@ -125,6 +124,7 @@ void draw(const nlohmann::json& json) {
     auto all = Container::Horizontal({left_window, details | flex});
 
     all = all | size(WIDTH, LESS_THAN, 130);
+    all = all | size(HEIGHT, GREATER_THAN, 52);
 
     screen.Loop(all);
 }
