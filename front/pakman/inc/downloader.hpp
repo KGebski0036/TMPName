@@ -1,9 +1,4 @@
 #pragma once
+#include <string>
 
-std::string url = "http://localhost:8080/yourfile.txt";  // Replace with the actual file path
-std::string outputFile = "downloaded_file.txt";
-
-downloadFile(url, outputFile);
-
-Cd
-
+void downloadFile(const std::string& url, const std::string& outputFile);
