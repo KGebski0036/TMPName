@@ -1,20 +1,27 @@
-use std::{fs::{self, read_dir, File}, io::Read, path::PathBuf, sync::Arc};
-use serde::{self, Deserialize, Serialize};
+use super::split_at_repo;
 use anyhow::Result;
+use md5::{Digest, Md5};
+use serde::{self, Deserialize, Serialize};
+use std::{
+    fs::{self, read_dir, File},
+    io::Read,
+    path::PathBuf,
+    sync::Arc,
+};
 use thiserror::Error;
-use md5::{Md5, Digest};
+
 #[derive(Error, Debug)]
 pub enum ParseError {
     #[error(r#"Error reading metadata ({0}): {1}"#)]
     ReadError(PathBuf, String),
 
     #[error(r#"No zip archive in {0}"#)]
-    NoZipError(PathBuf)
+    NoZipError(PathBuf),
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Metadata {
-    entries: Vec<ShortEntry>
+    entries: Vec<ShortEntry>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -27,7 +34,7 @@ struct ExtendedEntry {
     author: String,
     question_amount: u64,
     date: String,
-    format: u64
+    format: u64,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -36,7 +43,7 @@ pub struct ShortEntry {
     name: String,
     version: String,
     path: String,
-    course_id: String
+    course_id: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -44,8 +51,7 @@ struct PackageMetadata {
     name: String,
     version: String,
     course_id: String,
-    description: String
-
+    description: String,
 }
 
 fn compute_file_hash(path: &PathBuf) -> Result<String> {
@@ -81,9 +87,9 @@ fn to_short_entry(package_metadata: PackageMetadata, path: PathBuf) -> Result<Sh
                         md5: hash,
                         name: package_metadata.name,
                         version: package_metadata.version,
-                        path: path.to_str().unwrap().to_string(),
-                        course_id: package_metadata.course_id
-                    })
+                        path: split_at_repo(path.to_str().unwrap().to_string())?,
+                        course_id: package_metadata.course_id,
+                    });
                 }
             }
         }
@@ -91,12 +97,11 @@ fn to_short_entry(package_metadata: PackageMetadata, path: PathBuf) -> Result<Sh
     Err(ParseError::NoZipError(path).into())
 }
 
-
 fn parse_package_metadata(package_path: PathBuf) -> Result<PackageMetadata> {
     let metadata_path = package_path.join(PathBuf::from("metadata.json"));
     let package_metadata: PackageMetadata = match fs::read_to_string(&metadata_path) {
         Ok(contents) => serde_json::from_str(&contents)?,
-        Err(e) => {return Err(ParseError::ReadError(metadata_path, e.to_string()).into())}
+        Err(e) => return Err(ParseError::ReadError(metadata_path, e.to_string()).into()),
     };
     Ok(package_metadata)
 }
@@ -108,13 +113,13 @@ pub fn build_metadata(repo_path: Arc<PathBuf>) -> Result<Metadata> {
         .filter(|entry| entry.path().is_dir())
         .for_each(|entry| {
             let path = entry.path();
-            let metadata_path = path.join("metadata.json"); 
+            let metadata_path = path.join("metadata.json");
             if metadata_path.is_file() {
                 if let Ok(package_metadata) = parse_package_metadata(path.clone()) {
                     match to_short_entry(package_metadata, path) {
-                        Ok(entry) => {metadata.push(entry) },
-                        Err(e) => println!("{:?}", e)
-                    } 
+                        Ok(entry) => metadata.push(entry),
+                        Err(e) => println!("{:?}", e),
+                    }
                 }
             } else {
                 println!("'metadata.json' not found in {}", path.display());
