@@ -30,7 +30,7 @@ async fn main() -> Result<()> {
         while let Some(res) = rx.recv().await {
             match res {
                 Ok(_) => {
-                    match build_metadata(metadata_path_arc) {
+                    match build_metadata(Arc::clone(&metadata_path_arc)) {
                         Ok(metadata) => {
                             println!("[+] metadata built successfully");
 
@@ -48,8 +48,6 @@ async fn main() -> Result<()> {
 
     let app = Router::new()
         .nest_service("/repo", ServeDir::new(repo_dir))
-        .nest_service("/metadata/metadata.json", 
-            ServeFile::new(metadata_path))
         .layer(Extension(metadata_state));
 
     let listener = tokio::net::TcpListener::bind("127.0.0.1:8080")
