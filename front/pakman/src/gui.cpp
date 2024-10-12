@@ -30,7 +30,7 @@ Component Text(const std::string& t) {
   return Renderer([t] { return text(t) | borderEmpty; });
 }
 
-int draw() {
+void draw() {
   using namespace std::literals;
   std::vector<std::string> tab_values{
       "Tab 1", "Tab 2", "Tab 3", "A very very long tab", "탭",
