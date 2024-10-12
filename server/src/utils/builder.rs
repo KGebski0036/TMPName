@@ -94,26 +94,25 @@ fn to_short_entry(package_metadata: PackageMetadata, path: PathBuf) -> Result<Sh
 
 fn parse_package_metadata(package_path: PathBuf) -> Result<PackageMetadata> {
     let metadata_path = package_path.join(PathBuf::from("metadata.json"));
-    let package_metadata: PackageMetadata = match fs::read_to_string(package_path) {
+    let package_metadata: PackageMetadata = match fs::read_to_string(&metadata_path) {
         Ok(contents) => serde_json::from_str(&contents)?,
         Err(e) => {return Err(ParseError::ReadError(metadata_path, e.to_string()).into())}
     };
     Ok(package_metadata)
 }
 
-pub fn build_metadata(metadata_path: Arc<PathBuf>) -> Result<Metadata> {
+pub fn build_metadata(repo_path: Arc<PathBuf>) -> Result<Metadata> {
     let mut metadata: Vec<ShortEntry> = Vec::new();
-    fs::read_dir(metadata_path.as_path())?
+    fs::read_dir(repo_path.as_path())?
         .filter_map(Result::ok)
         .filter(|entry| entry.path().is_dir())
         .for_each(|entry| {
             let path = entry.path();
-            let metadata_path = path.join("metadata.json");
-
+            let metadata_path = path.join("metadata.json"); 
             if metadata_path.is_file() {
                 if let Ok(package_metadata) = parse_package_metadata(path.clone()) {
                     match to_short_entry(package_metadata, path) {
-                        Ok(entry) => metadata.push(entry),
+                        Ok(entry) => {metadata.push(entry) },
                         Err(e) => println!("{:?}", e)
                     } 
                 }

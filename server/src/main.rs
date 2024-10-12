@@ -8,30 +8,27 @@ use std::{
 use tower_http::services::ServeDir;
 
 use utils::{watcher::watch_directory, builder::build_metadata};
-use routes::{get_metadata_all::get_metadata_all, index::index};
+use routes::{get_metadata_all::get_metadata_all, // index::index
+};
 
 #[tokio::main]
 async fn main() -> Result<()> {
     let repo_dir= PathBuf::from(env::var("REPO_DIR").unwrap_or(String::from("./repo")));
-    let metadata_dir= PathBuf::from(env::var("METADATA_DIR").unwrap_or(String::from("./metadata")));
-    let metadata_path  = metadata_dir.join(PathBuf::from("metadata.json"));
-    let rx = watch_directory(&repo_dir)?;
+    let (watcher, rx) = watch_directory(&repo_dir)?;
 
     let metadata_state = Arc::new(RwLock::new(None));
     let metadata_state_clone = Arc::clone(&metadata_state);
     
-    match File::create_new(&metadata_path) {
-        Ok(_) => {println!("[+] metadata.json created")},
-        Err(_) => {println!("[+] metadata.json present on disk")}
-    }
+    let _watcher_arc = Arc::new(watcher);
 
-    let metadata_path_arc = Arc::new(metadata_path.clone());
+    let repo_path_arc = Arc::new(repo_dir.clone());
     tokio::spawn(async move {
         let mut rx = rx;
+        println!("{:?}", repo_path_arc);
         while let Some(res) = rx.recv().await {
             match res {
                 Ok(_) => {
-                    match build_metadata(Arc::clone(&metadata_path_arc)) {
+                    match build_metadata(Arc::clone(&repo_path_arc)) {
                         Ok(metadata) => {
                             println!("[+] metadata built successfully");
 
@@ -48,7 +45,7 @@ async fn main() -> Result<()> {
     });
 
     let app = Router::new()
-        .route("/", get(index))
+        //.route("/", get(index))
         .route("/get_metadata_all", get(get_metadata_all))
         .nest_service("/repo", ServeDir::new(repo_dir))
         .layer(Extension(metadata_state));
