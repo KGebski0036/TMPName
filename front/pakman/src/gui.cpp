@@ -78,11 +78,11 @@ void draw(const nlohmann::json& json) {
     auto left_window = Renderer(left, [&] { return window(text("Library"), left->Render()) | flex; });
     auto details_buttons = Container::Horizontal({
 Button("Download/Update", [&] {
-                          auto current = entries.at(static_cast<unsigned long>(selected - 1));
+                          const auto& current = entries.at(static_cast<unsigned long>(selected - 1));
                           downloadFile("http://localhost:8080" + current.path, current.name + ".zip");
                         }, Style(Color::Green)),
                         Button("Delete", [&] {
-                          auto current = entries.at(static_cast<unsigned long>(selected - 1));
+                          const auto& current = entries.at(static_cast<unsigned long>(selected - 1));
                           std::filesystem::remove(current.name + ".zip");
                         }, Style(Color::Red)),
 
@@ -126,9 +126,9 @@ Button("Download/Update", [&] {
     auto package_details = Container::Vertical({details, details_buttons});
 
     auto right_side =
-        Renderer(package_details, [&]() { return window(text("Deck Details"), package_details->Render()); });
+        Renderer(package_details, [&]() { return window(text("Deck Details"), package_details->Render()) | size(WIDTH,EQUAL,50); });
 
-    auto all = Container::Horizontal({left_window, right_side | flex});
+    auto all = Container::Horizontal({left_window, right_side });
 
     screen.Loop(all);
 }
