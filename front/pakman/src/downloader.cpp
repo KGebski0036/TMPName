@@ -1,5 +1,4 @@
 #include <cpr/cpr.h>
-#include <iostream>
 #include <downloader.hpp>
 
 void downloadFile(const std::string& url, const std::string& outputFile) {
