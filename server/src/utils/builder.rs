@@ -31,6 +31,7 @@ pub struct ExtendedEntry {
     pub version: String,
     pub course_id: String,
     pub description: String,
+    pub path: String,
     pub author: String,
     pub question_amount: u64,
     pub format: u64,

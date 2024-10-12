@@ -55,6 +55,7 @@ fn parse_metadata(
                     name: entry.name.clone(),
                     version: entry.version.clone(),
                     course_id: entry.course_id.clone(),
+                    path: entry.path.clone(),
                     description: package_metadata.description,
                     author: package_metadata.author,
                     question_amount: get_question_count(
