@@ -24,7 +24,7 @@ static auto Style(Color color) -> ButtonOption {
 }
 
 void draw(const nlohmann::json& json) {
-    auto screen = ScreenInteractive::TerminalOutput();
+    auto screen = ScreenInteractive::Fullscreen();
 
     struct entry {
         std::string name;
@@ -123,7 +123,6 @@ void draw(const nlohmann::json& json) {
     auto all = Container::Horizontal({left_window, details | flex});
 
     all = all | size(WIDTH, LESS_THAN, 130);
-    all = all | size(HEIGHT, GREATER_THAN, 52);
 
     screen.Loop(all);
 }
