@@ -1,54 +1,37 @@
 mod utils;
-
+mod routes;
 use anyhow::Result;
-use axum::{serve, Extension, Router};
+use axum::{serve,routing::{get}, Router};
 use std::{
-    env, fs::File, path::PathBuf, sync::{Arc, RwLock}
+    env,
+    path::{Path, PathBuf},
 };
-use tower_http::services::{ServeDir, ServeFile};
-
-use utils::{watcher::watch_directory, builder::build_metadata};
+use tower_http::services::ServeDir;
+use routes::index;
+use utils::watcher::watch_directory;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let repo_dir= PathBuf::from(env::var("REPO_DIR").unwrap_or(String::from("./repo")));
-    let metadata_dir= PathBuf::from(env::var("METADATA_DIR").unwrap_or(String::from("./metadata")));
-    let metadata_path  = metadata_dir.join(PathBuf::from("metadata.json"));
+    let repo_dir: PathBuf = PathBuf::from(env::var("REPO_DIR").unwrap_or(String::from("./repo")));
+
+
     let rx = watch_directory(&repo_dir)?;
 
-    let metadata_state = Arc::new(RwLock::new(None));
-    let metadata_state_clone = Arc::clone(&metadata_state);
-    
-    match File::create_new(&metadata_path) {
-        Ok(_) => {println!("[+] metadata.json created")},
-        Err(_) => {println!("[+] metadata.json present on disk")}
-    }
-
-    let metadata_path_arc = Arc::new(metadata_path.clone());
+    // Spawn a task to handle filesystem events
     tokio::spawn(async move {
         let mut rx = rx;
         while let Some(res) = rx.recv().await {
             match res {
-                Ok(_) => {
-                    match build_metadata(Arc::clone(&metadata_path_arc)) {
-                        Ok(metadata) => {
-                            println!("[+] metadata built successfully");
-
-                            // Update the shared state
-                            let mut metadata_lock = metadata_state_clone.write().unwrap();
-                            *metadata_lock = Some(metadata);
-                        }
-                        Err(e) => println!("[-] error building metadata: {}", e),
-                    }
+                Ok(event) => {
+                    println!("Filesystem event: {:?}", event);
                 }
                 Err(e) => println!("Watch error: {:?}", e),
             }
         }
     });
 
-    let app = Router::new()
-        .nest_service("/repo", ServeDir::new(repo_dir))
-        .layer(Extension(metadata_state));
+    let app = Router::new().nest_service("/static", ServeDir::new(repo_dir)).
+    route("/index", get(routes::index()));
 
     let listener = tokio::net::TcpListener::bind("127.0.0.1:8080")
         .await
