@@ -11,7 +11,7 @@
 
 using namespace ftxui;
 
-ButtonOption Style(Color color) {
+static auto Style(Color color) -> ButtonOption {
     auto option = ButtonOption::Animated(color);
     option.transform = [](const EntryState& s) {
         auto element = text(s.label);
@@ -78,16 +78,15 @@ void draw(const nlohmann::json& json) {
 
     auto details_info = Renderer([&] {
 
-        auto current = entries.at(selected - 1);
+        auto current = entries.at(static_cast<unsigned long>(selected - 1));
 
         if (current.question_amount == 0) {
-          std::cout << "aaaaa" << "\n";
-          std::string url = "http://localhost:8080/get_package_metadata?hash=" + current.hash;
-          std::string outputFile = current.hash + ".json";
+          const std::string url = "http://localhost:8080/get_package_metadata?hash=" + current.hash;
+          const std::string outputFile = current.hash + ".json";
 
           downloadFile(url, outputFile);
 
-          std::ifstream t(outputFile);
+          const std::ifstream t(outputFile);
           std::stringstream buffer;
           buffer << t.rdbuf();
           const nlohmann::json j = nlohmann::json::parse(buffer.str());
@@ -98,7 +97,7 @@ void draw(const nlohmann::json& json) {
           current.question_amount = j.at("question_amount");
         }
 
-        return window(text("Details about deck"), vbox({
+        return window(text("Deck Details"), vbox({
           vbox({
             center(text(current.name)),
             hbox({
