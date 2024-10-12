@@ -1,13 +1,13 @@
 mod utils;
-mod routes;
+
 use anyhow::Result;
-use axum::{serve,routing::{get}, Router};
+use axum::{serve, Router};
 use std::{
     env,
     path::{Path, PathBuf},
 };
 use tower_http::services::ServeDir;
-use routes::index;
+
 use utils::watcher::watch_directory;
 
 #[tokio::main]
@@ -30,8 +30,7 @@ async fn main() -> Result<()> {
         }
     });
 
-    let app = Router::new().nest_service("/static", ServeDir::new(repo_dir)).
-    route("/index", get(routes::index()));
+    let app = Router::new().nest_service("/static", ServeDir::new(repo_dir));
 
     let listener = tokio::net::TcpListener::bind("127.0.0.1:8080")
         .await
