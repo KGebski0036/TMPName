@@ -1,3 +1,3 @@
 #pragma once
-
-int draw();
+#include "nlohmann/json.hpp"
+void draw(const nlohmann::json &json);
