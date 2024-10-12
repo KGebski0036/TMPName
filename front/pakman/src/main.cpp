@@ -11,7 +11,7 @@ auto main() -> int {
                                              "    \"list\": [\n"
                                              "        {\n"
                                              "            \"id\": 1,\n"
-                                             "            \"name\": \"Miernictwo\",\n"
+                                             "            \"name\": \"Miernictwo SDGHSDGHSDGHSD\",\n"
                                              "            \"path\": \"/path/to/file\",\n"
                                              "            \"ver\": \"1.0\",\n"
                                              "            \"curseId\": \"CBE2023\"\n"

@@ -5,8 +5,22 @@
 #include "ftxui/component/screen_interactive.hpp"
 #include "ftxui/dom/elements.hpp"
 
+  using namespace ftxui;
+
+ButtonOption Style(Color color) {
+  auto option = ButtonOption::Animated(color);
+  option.transform = [](const EntryState& s) {
+    auto element = text(s.label);
+    if (s.focused) {
+      element |= bold;
+    }
+    return element | center | borderEmpty | flex;
+  };
+  return option;
+}
+
+
 void draw(const nlohmann::json &json) {
-    using namespace ftxui;
     auto screen = ScreenInteractive::TerminalOutput();
 
     struct entry{
@@ -34,14 +48,31 @@ void draw(const nlohmann::json &json) {
     auto test = Renderer(menu, [&] {
         return window(text("essa"), menu->Render()) | flex;
     });
-    auto details_comp = Renderer([&] {
-        return window(text("details"), vbox({text(focused->name) | border, text("cos"),})) | flex;
+    auto details_info = Renderer([&] {
+        return window(text("Details about deck"), vbox({
+          vbox({
+            center(text(focused->name)),
+            hbox({
+              center(text("Author: Anonymus")) | flex,
+              center(text("Number of cards: 69")) | flex,
+              center(text("Course: CBE2024")) | flex,
+              center(text("Update: 10.12.2023")) | flex,
+            })
+          }) | border,
+          separator(),
+          paragraph(focused->name + " baza pytań."),
+        })) | flex;
+    });
+    auto details = Container::Vertical({
+      details_info,
+      Container::Horizontal({
+         Button("Download/Update", [&] { return; }, Style(Color::Green)),
+         Button("Delete", [&] { return; }, Style(Color::Red)),
+      })
     });
     auto all = Container::Horizontal({
-                                             test, details_comp
+                                             test, details | flex
                                      });
 
     screen.Loop(all);
-
-    std::cout << "Selected element = " << selected << std::endl;
 }
