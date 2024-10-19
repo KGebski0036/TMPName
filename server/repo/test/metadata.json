@@ -1,8 +1,8 @@
 {
-    "name": "Miernictwo",
-    "version": "1.0",
-    "course_id": "CBE2023",
-    "description": "description",
-    "author": "test1",
-    "format": 1
+  "name": "Miernictwo",
+  "version": "1.0",
+  "course_id": "CBE2023",
+  "description": "description",
+  "author": "test1",
+  "format": 1
 }

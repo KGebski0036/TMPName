@@ -16,7 +16,7 @@ pub enum ParseError {
     #[error(r#"Error parsing metadata"#)]
     ParseError(),
     #[error(r#"No package found"#)]
-    NoPackageError()
+    NoPackageError(),
 }
 
 fn get_question_count(zip_path: PathBuf) -> Result<u64> {
@@ -43,10 +43,11 @@ fn parse_metadata(
 ) -> Result<ExtendedEntry> {
     for entry in &metadata.entries {
         if hash == entry.hash {
-            let local_path = PathBuf::from(&entry.path[1..]).parent().unwrap().to_path_buf();
-            let filepath = repo_path
+            let local_path = PathBuf::from(&entry.path[1..])
                 .parent()
-                .unwrap().join(local_path);
+                .unwrap()
+                .to_path_buf();
+            let filepath = repo_path.parent().unwrap().join(local_path);
             if let Ok(contents) = fs::read_to_string(filepath.join(PathBuf::from("metadata.json")))
             {
                 let package_metadata: PackageMetadata = serde_json::from_str(&contents)?;
@@ -84,8 +85,8 @@ pub async fn get_package_metadata(
         if let Some(metadata) = &*metadata_lock {
             match parse_metadata(metadata, hash, repo_path) {
                 Ok(extended) => return Json(json!(extended)),
-                Err(e) => return Json(json!({"error": format!("{:?}", e)})) 
-            } 
+                Err(e) => return Json(json!({"error": format!("{:?}", e)})),
+            }
         } else {
             return Json(json!({"error": "Metadata not available"}));
         }

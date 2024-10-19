@@ -10,14 +10,14 @@ use std::{
 use tower_http::services::ServeDir;
 
 use routes::{
-    get_metadata_all::get_metadata_all,
-    get_package_metadata::get_package_metadata, index::index
+    get_metadata_all::get_metadata_all, get_package_metadata::get_package_metadata, index::index,
 };
 use utils::{builder::build_metadata, watcher::watch_directory};
 
 #[tokio::main]
 async fn main() -> Result<()> {
     let repo_dir = PathBuf::from(env::var("REPO_DIR").unwrap_or(String::from("./repo")));
+    let static_dir = PathBuf::from(env::var("TEMPLATE_DIR").unwrap()).join(PathBuf::from("css"));
     let (watcher, rx) = watch_directory(&repo_dir)?;
 
     let metadata_state = Arc::new(RwLock::new(None));
@@ -53,12 +53,11 @@ async fn main() -> Result<()> {
         .route("/get_metadata_all", get(get_metadata_all))
         .route("/get_package_metadata", get(get_package_metadata))
         .nest_service("/repo", ServeDir::new(&repo_dir))
+        .nest_service("/css", ServeDir::new(&static_dir))
         .layer(Extension(metadata_state))
         .layer(Extension(Arc::new(repo_dir)));
 
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:8080")
-        .await
-        .unwrap();
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:8080").await.unwrap();
 
     serve(listener, app).await.unwrap();
 

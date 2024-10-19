@@ -10,12 +10,11 @@ RUN cargo fetch
 
 RUN cargo build --release
 
-COPY /templates /etc/server/templates 
 
 FROM debian:bookworm-slim
 
 ENV REPO_DIR="/var/server/repo"
-ENV TEMPLATE_DIR="/etc/server/templates"
+ENV TEMPLATE_DIR="/var/server/templates"
 
 COPY --from=builder /usr/src/app/target/release/server /usr/local/bin/server
 
@@ -23,6 +22,7 @@ WORKDIR /usr/local/bin
 
 VOLUME ["/var/server/repo"]
 
+COPY /templates /var/server/templates
 
 EXPOSE 8080
 

@@ -53,7 +53,7 @@ pub struct PackageMetadata {
     pub course_id: String,
     pub description: String,
     pub author: String,
-    pub format: u64
+    pub format: u64,
 }
 
 fn compute_file_hash(path: &PathBuf) -> Result<String> {
