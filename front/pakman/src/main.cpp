@@ -1,4 +1,4 @@
-#include <downloader.hpp>
+#{include<downloader.hpp>
 #include <string>
 #include <fstream>
 
@@ -9,11 +9,12 @@ auto main() -> int {
     const std::string url = "http://localhost:8080/get_metadata_all"; // Replace with the actual file path
     const std::string outputFile = "master.json";
 
-    downloadFile(url, outputFile);
+    // downloadFile(url, outputFile);
 
     const std::ifstream t(outputFile);
     std::stringstream buffer;
     buffer << t.rdbuf();
+    std::cerr << buffer.str();
     const nlohmann::json j = nlohmann::json::parse(buffer.str());
     draw(j);
 }

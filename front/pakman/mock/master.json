@@ -1,32 +1,32 @@
 {
-    "list": [
-        {
-            "id": 1,
-            "name": "Miernictwo",
-            "path": "/path/to/file",
-            "ver": "1.0",
-            "curseId": "CBE2023"
-        },
-        {
-            "id": 2,
-            "name": "Miernictwo2",
-            "path": "/path/to/file2",
-            "ver": "1.1",
-            "curseId": "CBE2023"
-        },
-        {
-            "id": 3,
-            "name": "Telekomuna",
-            "path": "/path/to/file3",
-            "ver": "1.0",
-            "curseId": "CBE2023"
-        },
-        {
-            "id": 4,
-            "name": "Ekonomia",
-            "path": "/path/to/file4",
-            "ver": "2.0",
-            "curseId": "CBD2023"
-        }
-    ]
+  "entries": [
+    {
+      "id": 1,
+      "name": "Miernictwo",
+      "path": "/path/to/file",
+      "ver": "1.0",
+      "curseId": "CBE2023"
+    },
+    {
+      "id": 2,
+      "name": "Miernictwo2",
+      "path": "/path/to/file2",
+      "ver": "1.1",
+      "curseId": "CBE2023"
+    },
+    {
+      "id": 3,
+      "name": "Telekomuna",
+      "path": "/path/to/file3",
+      "ver": "1.0",
+      "curseId": "CBE2023"
+    },
+    {
+      "id": 4,
+      "name": "Ekonomia",
+      "path": "/path/to/file4",
+      "ver": "2.0",
+      "curseId": "CBD2023"
+    }
+  ]
 }
