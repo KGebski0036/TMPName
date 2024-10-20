@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flashcard Quiz with Timer</title>
+
+  <!-- Style section to be included inside the head -->
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      position: relative;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .flashcard {
+      margin-top: 20px;
+      border: 1px solid #ccc;
+      padding: 20px;
+      border-radius: 8px;
+      background-color: #f9f9f9;
+    }
+
+    .question {
+      font-size: 1.2em;
+    }
+
+    .option {
+      display: block;
+      margin: 10px 0;
+      padding: 10px;
+      border-radius: 5px;
+      border: 1px solid #ddd;
+    }
+
+    .correct {
+      color: green;
+    }
+
+    .incorrect {
+      color: red;
+    }
+
+    .selected {
+      background-color: #cfe2f3;
+    }
+
+    .score {
+      font-size: 1.2em;
+      margin-top: 20px;
+    }
+
+    #timer {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 2em;
+      color: #32CD32;
+      background-color: black;
+      padding: 5px 15px;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- The rest of the body content will go here, like flashcards, etc. -->
+
+  <h1>Flashcard Quiz with Timer</h1>
+  <div id="timer">00:00.00</div>
+  <input type="file" id="fileInput" accept=".zip">
+
+  <div id="flashcard" class="flashcard hidden">
+    <div id="question" class="question"></div>
+    <div id="options"></div>
+    <div id="feedback" class="hidden"></div>
+    <button id="nextButton" class="hidden">Next Question</button>
+  </div>
+
+  <div id="scoreboard" class="hidden">
+    <div class="score"></div>
+    <button id="restartButton">Restart Quiz</button>
+  </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
+  <script>
+    let questions = [];
+    let correctAnswerIndex = -1;
+    let score = 0;
+    let startTime = 0;
+    let totalQuestions = 0;
+    let usedQuestions = [];
+    let selectedAnswerIndex = null;
+    let timerInterval = null;
+    let elapsedTime = 0;  // Store total elapsed time in milliseconds
+
+
+    document
+      .getElementById("fileInput")
+      .addEventListener("change", function (event) {
+        const file = event.target.files[0];
+        if (file && file.name.endsWith(".zip")) {
+          readZipFile(file);
+        } else {
+          alert("Please upload a valid ZIP file.");
+        }
+      });
+    function readZipFile(file) {
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        const arrayBuffer = e.target.result;
+        JSZip.loadAsync(arrayBuffer).then(function (zip) {
+          console.log('asa');
+          loadQuestions(zip);
+        });
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function loadQuestions(zip) {
+      questions = [];
+      usedQuestions = [];
+      let questionFiles = [];
+
+      zip.forEach(function (relativePath, zipEntry) {
+        if (relativePath.endsWith('.txt')) {
+          questionFiles.push(zipEntry);
+        }
+      });
+
+      totalQuestions = questionFiles.length;
+
+      let loadPromises = questionFiles.map(zipEntry => {
+        return zipEntry.async('text').then(function (content) {
+          const questionObj = parseQuestionFile(zipEntry.name, content);
+          questions.push(questionObj);
+        });
+      });
+
+      Promise.all(loadPromises).then(() => {
+        startQuiz();
+      });
+    }
+
+    function parseQuestionFile(fileName, content) {
+
+      const correctAnswerIndex = parseInt(content.split("\n")[0].search("1")); // Last character is the correct index (1-based)
+      const lines = content.split('\n');
+      let questionText = '';
+      const options = [];
+
+      lines.forEach(line => {
+        line = line.trim();
+        if (/^\d+\.\s/.test(line)) {
+          questionText = line;
+        } else if (/^[a-d]\)\s/.test(line)) {
+          options.push(line);
+        }
+      });
+
+      return {
+        question: questionText,
+        options: options,
+        correct: correctAnswerIndex
+      };
+    }
+
+    function startQuiz() {
+      document.getElementById('flashcard').classList.remove('hidden');
+      document.getElementById('scoreboard').classList.add('hidden');
+      score = 0;
+      startTime = Date.now();
+      elapsedTime = 0;
+      usedQuestions = [];
+      selectedAnswerIndex = null;
+
+      // Start the timer
+      startTimer();
+
+      showRandomQuestion();
+
+      document.addEventListener('keydown', handleKeyDown);
+    }
+
+    function showRandomQuestion() {
+      const nextButton = document.getElementById('nextButton');
+      const feedbackDiv = document.getElementById('feedback');
+      nextButton.classList.add('hidden');
+      feedbackDiv.classList.add('hidden');
+      selectedAnswerIndex = null;
+
+      let randomIndex;
+      do {
+        randomIndex = Math.floor(Math.random() * questions.length);
+      } while (usedQuestions.includes(randomIndex));
+
+      usedQuestions.push(randomIndex);
+      const questionObj = questions[randomIndex];
+      correctAnswerIndex = questionObj.correct;
+
+
+      document.getElementById("question").textContent =
+        questionObj.question.split(". ", 2)[1];
+      const optionsDiv = document.getElementById('options');
+      optionsDiv.innerHTML = '';
+
+      questionObj.options.forEach((option, index) => {
+        const button = document.createElement('button');
+        button.textContent = option;
+        button.className = 'option';
+        button.id = `option-${index + 1}`;
+        button.addEventListener('click', function () {
+          selectAnswer(index + 1);
+        });
+        optionsDiv.appendChild(button);
+      });
+    }
+
+    function selectAnswer(index) {
+      selectedAnswerIndex = index;
+
+      // Deselect any previously selected option
+      document.querySelectorAll('.option').forEach(option => {
+        option.classList.remove('selected');
+      });
+
+      // Highlight the selected option
+      const selectedOption = document.getElementById(`option-${index}`);
+      if (selectedOption) {
+        selectedOption.classList.add('selected');
+      }
+    }
+
+    function checkAnswer() {
+      if (selectedAnswerIndex === null) return;  // No answer selected
+
+      const feedbackDiv = document.getElementById('feedback');
+      feedbackDiv.classList.remove('hidden');
+
+      if (selectedAnswerIndex === correctAnswerIndex) {
+        score++;
+        feedbackDiv.textContent = 'Correct!';
+        feedbackDiv.classList.add('correct');
+        feedbackDiv.classList.remove('incorrect');
+      } else {
+        feedbackDiv.textContent = 'Incorrect!';
+        feedbackDiv.classList.add('incorrect');
+        feedbackDiv.classList.remove('correct');
+      }
+
+      const nextButton = document.getElementById('nextButton');
+      nextButton.classList.remove('hidden');
+
+      if (usedQuestions.length === totalQuestions) {
+        endQuiz();
+      }
+    }
+
+    function endQuiz() {
+      stopTimer();  // Stop the timer when the quiz ends
+      const totalTime = elapsedTime / 1000;
+      document.getElementById('flashcard').classList.add('hidden');
+      document.getElementById('scoreboard').classList.remove('hidden');
+      document.querySelector('.score').textContent = `Score: ${score}/${totalQuestions}, Time: ${totalTime.toFixed(2)} seconds`;
+
+      document.getElementById('restartButton').addEventListener('click', function () {
+        startQuiz();
+      });
+    }
+
+    function startTimer() {
+      const timerElement = document.getElementById('timer');
+      startTime = Date.now();  // Reset start time
+      timerInterval = setInterval(() => {
+        elapsedTime = Date.now() - startTime;
+        timerElement.textContent = formatTime(elapsedTime);
+      }, 10);
+    }
+
+    function stopTimer() {
+      clearInterval(timerInterval);
+    }
+
+    function formatTime(ms) {
+      let totalSeconds = Math.floor(ms / 1000);
+      let minutes = Math.floor(totalSeconds / 60);
+      let seconds = totalSeconds % 60;
+      let centiseconds = Math.floor((ms % 1000) / 10);
+
+      return (
+        String(minutes).padStart(2, '0') + ':' +
+        String(seconds).padStart(2, '0') + '.' +
+        String(centiseconds).padStart(2, '0')
+      );
+    }
+
+    // Key handling
+    function handleKeyDown(event) {
+      const key = event.key;
+      if (key >= '1' && key <= '4') {
+        selectAnswer(parseInt(key, 10
+          </body >
+</html >
